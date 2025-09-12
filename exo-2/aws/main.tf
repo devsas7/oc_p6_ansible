@@ -76,7 +76,7 @@ variable "generated_key_name" {
 // afin que celle ci soit utilisable pour se connecter
 // à notre serveur
 resource "tls_private_key" "my_ssh_key" {
-  algorithm = "ED25519"
+  algorithm = "RSA"
   rsa_bits  = 4096
 }
 
@@ -91,5 +91,8 @@ resource "local_sensitive_file" "pem_file" {
   filename             = pathexpand("~/.ssh/aws_${aws_key_pair.generated_key.key_name}.pem")
   file_permission      = "600"
   directory_permission = "700"
-  content              = tls_private_key.my_ssh_key.private_key_pem
+
+  content = tls_private_key.my_ssh_key.private_key_pem
+  # Attention, sur MacOS il est possible qu'il soit nécessaire de modifier la ligne précédente par:
+  # content              = tls_private_key.my_ssh_key.private_key_openssh
 }
