@@ -29,7 +29,7 @@ resource "aws_instance" "my_server" {
   # et du type d'instance (i.e. caractéristiques de performance)
   # de la machine virtuelle à créer
   ami           = "ami-04a81a99f5ec58529"
-  instance_type = "t2.micro"
+  instance_type = "t3.micro"
 
   # Définition des étiquettes à associer à la machine
   # virtuelle, ici "Name" pour définir un nom
