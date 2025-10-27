@@ -4,10 +4,12 @@
   become: true
   tasks:
 
+    # Mettre à jour les paquets
     - name: Mettre à jour les paquets APT
       apt:
         update_cache: yes
 
+    # Installer Nginx
     - name: Installer Nginx
       apt:
         name: nginx
@@ -19,6 +21,7 @@
         state: started
         enabled: yes
 
+    # Installer Git et curl
     - name: Installer Git et curl
       apt:
         name:
@@ -26,13 +29,14 @@
           - curl
         state: present
 
+    # Cloner le dépôt Angular officiel (fourni par OpenClassrooms)
     - name: Cloner le dépôt Angular
       git:
-        repo: "https://github.com/devsas7/oc_p6_ansible.git"
+        repo: "https://github.com/OpenClassrooms-Student-Center/G-rez-l-int-gration-continue-avec-Git-et-scripts-Application-Angular.git"
         dest: /var/www/angular-app
         version: main
 
-    #Install Node.js from NodeSource
+    # Installer Node.js depuis NodeSource (corrige les erreurs apt 400)
     - name: Ajouter le dépôt NodeSource pour Node.js 18
       shell: curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
       args:
@@ -51,7 +55,8 @@
     - debug:
         msg: "Version de Node.js installée : {{ node_version.stdout }}"
 
-    - name: Construire l'application Angular
+    # Installer les dépendances npm et construire l'app Angular
+    - name: Installer les dépendances npm
       command: npm install
       args:
         chdir: /var/www/angular-app
@@ -61,6 +66,7 @@
       args:
         chdir: /var/www/angular-app
 
+    # Déployer la build Angular sur Nginx
     - name: Supprimer l'ancien contenu du répertoire Nginx
       file:
         path: /var/www/html
@@ -73,8 +79,10 @@
         owner: www-data
         group: www-data
         mode: '0755'
+        remote_src: yes
       notify: Redémarrer Nginx
 
+    # Configuration Nginx
     - name: Créer la configuration Nginx pour Angular
       copy:
         dest: /etc/nginx/sites-available/angular-app
