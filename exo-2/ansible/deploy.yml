@@ -19,9 +19,11 @@
         state: started
         enabled: yes
 
-    - name: Installer Git
+    - name: Installer Git et curl
       apt:
-        name: git
+        name:
+          - git
+          - curl
         state: present
 
     - name: Cloner le dépôt Angular
@@ -30,12 +32,24 @@
         dest: /var/www/angular-app
         version: main
 
-    - name: Installer Node.js et npm
+    #Install Node.js from NodeSource
+    - name: Ajouter le dépôt NodeSource pour Node.js 18
+      shell: curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+      args:
+        executable: /bin/bash
+
+    - name: Installer Node.js
       apt:
-        name:
-          - nodejs
-          - npm
+        name: nodejs
         state: present
+        update_cache: yes
+
+    - name: Vérifier la version de Node.js
+      command: node -v
+      register: node_version
+
+    - debug:
+        msg: "Version de Node.js installée : {{ node_version.stdout }}"
 
     - name: Construire l'application Angular
       command: npm install
