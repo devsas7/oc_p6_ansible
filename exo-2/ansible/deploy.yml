@@ -26,7 +26,7 @@
 
     - name: Cloner le dépôt Angular
       git:
-        repo: "https://github.com/OpenClassrooms-Student-Center/Devops-P6-frontend.git"
+        repo: "https://github.com/devsas7/oc_p6_ansible.git"
         dest: /var/www/angular-app
         version: main
 
