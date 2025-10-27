@@ -1,0 +1,90 @@
+---
+- name: Déployer l'application Angular sur le serveur
+  hosts: myservers
+  become: true
+  tasks:
+
+    - name: Mettre à jour les paquets APT
+      apt:
+        update_cache: yes
+
+    - name: Installer Nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Démarrer et activer le service Nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+    - name: Installer Git
+      apt:
+        name: git
+        state: present
+
+    - name: Cloner le dépôt Angular
+      git:
+        repo: "https://github.com/OpenClassrooms-Student-Center/Devops-P6-frontend.git"
+        dest: /var/www/angular-app
+        version: main
+
+    - name: Installer Node.js et npm
+      apt:
+        name:
+          - nodejs
+          - npm
+        state: present
+
+    - name: Construire l'application Angular
+      command: npm install
+      args:
+        chdir: /var/www/angular-app
+
+    - name: Générer la build Angular
+      command: npm run build --prod
+      args:
+        chdir: /var/www/angular-app
+
+    - name: Supprimer l'ancien contenu du répertoire Nginx
+      file:
+        path: /var/www/html
+        state: absent
+
+    - name: Copier la build Angular vers le répertoire Nginx
+      copy:
+        src: /var/www/angular-app/dist/
+        dest: /var/www/html/
+        owner: www-data
+        group: www-data
+        mode: '0755'
+      notify: Redémarrer Nginx
+
+    - name: Créer la configuration Nginx pour Angular
+      copy:
+        dest: /etc/nginx/sites-available/angular-app
+        content: |
+          server {
+              listen 80;
+              server_name _;
+              root /var/www/html;
+              index index.html;
+              location / {
+                  try_files $uri $uri/ /index.html;
+              }
+          }
+      notify: Redémarrer Nginx
+
+    - name: Activer la configuration Nginx
+      file:
+        src: /etc/nginx/sites-available/angular-app
+        dest: /etc/nginx/sites-enabled/angular-app
+        state: link
+      notify: Redémarrer Nginx
+
+  handlers:
+    - name: Redémarrer Nginx
+      service:
+        name: nginx
+        state: restarted
