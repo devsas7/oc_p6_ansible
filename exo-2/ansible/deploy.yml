@@ -2,18 +2,30 @@
 - name: Déployer l'application Angular sur le serveur
   hosts: myservers
   become: true
+
+  handlers:
+    - name: Redémarrer Nginx
+      service:
+        name: nginx
+        state: restarted
+
   tasks:
 
-    # Mettre à jour les paquets
-    - name: Mettre à jour les paquets APT
-      apt:
-        update_cache: yes
+    # Nettoyer et mettre à jour les paquets APT (évite les erreurs 400)
+    - name: Nettoyer et mettre à jour les paquets APT
+      shell: |
+        apt-get clean
+        rm -rf /var/lib/apt/lists/*
+        apt-get update -y
+      args:
+        executable: /bin/bash
 
     # Installer Nginx
     - name: Installer Nginx
       apt:
         name: nginx
         state: present
+        update_cache: yes
 
     - name: Démarrer et activer le service Nginx
       service:
@@ -29,14 +41,14 @@
           - curl
         state: present
 
-    # Cloner le dépôt Angular officiel (fourni par OpenClassrooms)
+    # Cloner le dépôt Angular officiel
     - name: Cloner le dépôt Angular
       git:
         repo: "https://github.com/OpenClassrooms-Student-Center/G-rez-l-int-gration-continue-avec-Git-et-scripts-Application-Angular.git"
         dest: /var/www/angular-app
         version: main
 
-    # Installer Node.js depuis NodeSource (corrige les erreurs apt 400)
+    # Installer Node.js depuis NodeSource
     - name: Ajouter le dépôt NodeSource pour Node.js 18
       shell: curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
       args:
@@ -74,8 +86,8 @@
 
     - name: Copier la build Angular vers le répertoire Nginx
       copy:
-        src: /var/www/angular-app/dist/
-        dest: /var/www/html/
+        src: /var/www/angular-app/dist/olympic-games-starter/
+        dest: /var/www/html/olympic-games-starter/
         owner: www-data
         group: www-data
         mode: '0755'
@@ -90,7 +102,7 @@
           server {
               listen 80;
               server_name _;
-              root /var/www/html;
+              root /var/www/html/olympic-games-starter;
               index index.html;
               location / {
                   try_files $uri $uri/ /index.html;
@@ -104,9 +116,3 @@
         dest: /etc/nginx/sites-enabled/angular-app
         state: link
       notify: Redémarrer Nginx
-
-  handlers:
-    - name: Redémarrer Nginx
-      service:
-        name: nginx
-        state: restarted
