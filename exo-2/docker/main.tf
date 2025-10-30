@@ -28,8 +28,17 @@ resource "docker_container" "my_vm" {
   image = docker_image.custom_ubuntu.image_id
 
   ports {
+    internal = 80
+    external = 80
+    ip       = "0.0.0.0"
+    protocol = "tcp"
+  }
+
+  ports {
     internal = 22
     external = 2222
+    ip       = "0.0.0.0"
+    protocol = "tcp"
   }
 
   # Keep container running with SSHD
